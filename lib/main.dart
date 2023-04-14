@@ -3,9 +3,11 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
+import 'package:google_mlkit_face_detection/google_mlkit_face_detection.dart';
 import 'package:image/image.dart' as img;
 
 import 'ML/Recognition.dart';
+import 'ML/Recognizer.dart';
 
 
 late List<CameraDescription> cameras;
@@ -44,16 +46,20 @@ class _MyHomePageState extends State<MyHomePage> {
   late List<Recognition> recognitions = [];
 
   //TODO declare face detector
+  late FaceDetector faceDetector;
 
   //TODO declare face recognizer
+  late Recognizer _recognizer;
 
   @override
   void initState() {
     super.initState();
 
     //TODO initialize face detector
+    faceDetector = FaceDetector(options: FaceDetectorOptions(performanceMode: FaceDetectorMode.fast));
 
     //TODO initialize face recognizer
+    _recognizer = Recognizer();
 
     //TODO initialize camera footage
     initializeCamera();
