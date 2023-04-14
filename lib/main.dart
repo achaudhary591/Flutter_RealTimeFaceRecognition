@@ -9,8 +9,8 @@ import 'package:image/image.dart' as img;
 import 'ML/Recognition.dart';
 import 'ML/Recognizer.dart';
 
-
 late List<CameraDescription> cameras;
+
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   cameras = await availableCameras();
@@ -22,17 +22,15 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        useMaterial3: true
-      ),
-      home: MyHomePage(
-      ),
+      theme: ThemeData(useMaterial3: true),
+      home: MyHomePage(),
     );
   }
 }
 
 class MyHomePage extends StatefulWidget {
   MyHomePage({Key? key}) : super(key: key);
+
   @override
   _MyHomePageState createState() => _MyHomePageState();
 }
@@ -56,7 +54,8 @@ class _MyHomePageState extends State<MyHomePage> {
     super.initState();
 
     //TODO initialize face detector
-    faceDetector = FaceDetector(options: FaceDetectorOptions(performanceMode: FaceDetectorMode.fast));
+    faceDetector = FaceDetector(
+        options: FaceDetectorOptions(performanceMode: FaceDetectorMode.fast));
 
     //TODO initialize face recognizer
     _recognizer = Recognizer();
@@ -73,7 +72,8 @@ class _MyHomePageState extends State<MyHomePage> {
         return;
       }
       controller.startImageStream((image) => {
-            if (!isBusy) {isBusy = true, frame = image, doFaceDetectionOnFrame()}
+            if (!isBusy)
+              {isBusy = true, frame = image, doFaceDetectionOnFrame()}
           });
     });
   }
@@ -88,77 +88,93 @@ class _MyHomePageState extends State<MyHomePage> {
   //TODO face detection on a frame
   dynamic _scanResults;
   CameraImage? frame;
+
   doFaceDetectionOnFrame() async {
     //TODO convert frame into InputImage format
-
+    InputImage inputImage = getInputImage();
     //TODO pass InputImage to face detection model and detect faces
-
+    List<Face> faces = await faceDetector.processImage(inputImage);
+    print("NUMBER OF FACES =*==*==*==*==*==*=>${faces.length}");
     //TODO perform face recognition on detected faces
-
+    performFaceRecognition(faces);
     setState(() {
       isBusy = false;
+      _scanResults = recognitions;
     });
   }
 
   img.Image? image;
   bool register = false;
+
   ////TODO perform Face Recognition
   performFaceRecognition(List<Face> faces) async {
     recognitions.clear();
 
     //TODO convert CameraImage to Image and rotate it so that our frame will be in a portrait
     image = convertYUV420ToImage(frame!);
-    image =img.copyRotate(image!, camDirec == CameraLensDirection.front?270:90);
+    image = img.copyRotate(
+        image!, camDirec == CameraLensDirection.front ? 270 : 90);
 
     for (Face face in faces) {
       Rect faceRect = face.boundingBox;
       //TODO crop face
-      image = img.copyCrop(image!, faceRect.left.toInt(),faceRect.top.toInt(),faceRect.width.toInt(),faceRect.height.toInt());
+      img.Image croppedFace = img.copyCrop(image!, faceRect.left.toInt(), faceRect.top.toInt(),
+          faceRect.width.toInt(), faceRect.height.toInt());
 
       //TODO pass cropped face to face recognition model
-      Recognition recognition = _recognizer.recognize(image!, faceRect);
-      if(recognition.distance>1){
+      Recognition recognition = _recognizer.recognize(croppedFace!, faceRect);
+      if (recognition.distance > 1) {
         recognition.name = "Unknown";
       }
       recognitions.add(recognition);
 
       //TODO show face registration dialogue
-      if(register){
-        showFaceRegistrationDialogue(image!,recognition);
+      if (register) {
+        showFaceRegistrationDialogue(croppedFace!, recognition);
         register = false;
       }
-
     }
 
     setState(() {
-      isBusy  = false;
-      _scanResults = faces;
+      isBusy = false;
+      _scanResults = recognitions;
     });
-
   }
 
   ////TODO Face Registration Dialogue
   TextEditingController textEditingController = TextEditingController();
-  showFaceRegistrationDialogue(img.Image croppedFace, Recognition recognition){
+
+  showFaceRegistrationDialogue(img.Image croppedFace, Recognition recognition) {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text("Face Registration",textAlign: TextAlign.center),alignment: Alignment.center,
+        title: const Text("Face Registration", textAlign: TextAlign.center),
+        alignment: Alignment.center,
         content: SizedBox(
           height: 340,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              const SizedBox(height: 20,),
-              Image.memory(Uint8List.fromList(img.encodeBmp(croppedFace!)),width: 200,height: 200,),
+              const SizedBox(
+                height: 20,
+              ),
+              Image.memory(
+                Uint8List.fromList(img.encodeBmp(croppedFace!)),
+                width: 200,
+                height: 200,
+              ),
               SizedBox(
                 width: 200,
                 child: TextField(
                     controller: textEditingController,
-                    decoration: const InputDecoration( fillColor: Colors.white, filled: true,hintText: "Enter Name")
-                ),
+                    decoration: const InputDecoration(
+                        fillColor: Colors.white,
+                        filled: true,
+                        hintText: "Enter Name")),
               ),
-              const SizedBox(height: 10,),
+              const SizedBox(
+                height: 10,
+              ),
               ElevatedButton(
                   onPressed: () {
                     Recognizer.registered.putIfAbsent(
@@ -168,11 +184,14 @@ class _MyHomePageState extends State<MyHomePage> {
                     ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
                       content: Text("Face Registered"),
                     ));
-                  },style: ElevatedButton.styleFrom(primary:Colors.blue,minimumSize: const Size(200,40)),
+                  },
+                  style: ElevatedButton.styleFrom(
+                      primary: Colors.blue, minimumSize: const Size(200, 40)),
                   child: const Text("Register"))
             ],
           ),
-        ),contentPadding: EdgeInsets.zero,
+        ),
+        contentPadding: EdgeInsets.zero,
       ),
     );
   }
@@ -204,6 +223,7 @@ class _MyHomePageState extends State<MyHomePage> {
     }
     return image;
   }
+
   img.Image _convertYUV420(CameraImage image) {
     var imag = img.Image(image.width, image.height); // Create Image buffer
 
@@ -213,13 +233,14 @@ class _MyHomePageState extends State<MyHomePage> {
     // Fill image buffer with plane[0] from YUV420_888
     for (int x = 0; x < image.width; x++) {
       for (int planeOffset = 0;
-      planeOffset < image.height * image.width;
-      planeOffset += image.width) {
+          planeOffset < image.height * image.width;
+          planeOffset += image.width) {
         final pixelColor = plane.bytes[planeOffset + x];
         // color: 0x FF  FF  FF  FF
         //           A   B   G   R
         // Calculate pixel color
-        var newVal = shift | (pixelColor << 16) | (pixelColor << 8) | pixelColor;
+        var newVal =
+            shift | (pixelColor << 16) | (pixelColor << 8) | pixelColor;
 
         imag.data[planeOffset + x] = newVal;
       }
@@ -227,6 +248,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
     return imag;
   }
+
   int yuv2rgb(int y, int u, int v) {
     // Convert yuv pixel to rgb
     var r = (y + v * 1436 / 1024 - 179).round();
@@ -243,6 +265,7 @@ class _MyHomePageState extends State<MyHomePage> {
         ((g << 8) & 0xff00) |
         (r & 0xff);
   }
+
   //
   // //TODO convert CameraImage to InputImage
   InputImage getInputImage() {
@@ -251,7 +274,8 @@ class _MyHomePageState extends State<MyHomePage> {
       allBytes.putUint8List(plane.bytes);
     }
     final bytes = allBytes.done().buffer.asUint8List();
-    final Size imageSize = Size(frame!.width.toDouble(), frame!.height.toDouble());
+    final Size imageSize =
+        Size(frame!.width.toDouble(), frame!.height.toDouble());
     final camera = description;
     final imageRotation =
         InputImageRotationValue.fromRawValue(camera.sensorOrientation);
@@ -295,7 +319,8 @@ class _MyHomePageState extends State<MyHomePage> {
       controller.value.previewSize!.height,
       controller.value.previewSize!.width,
     );
-    CustomPainter painter = FaceDetectorPainter(imageSize, _scanResults, camDirec);
+    CustomPainter painter =
+        FaceDetectorPainter(imageSize, _scanResults, camDirec);
     return CustomPaint(
       painter: painter,
     );
@@ -323,7 +348,6 @@ class _MyHomePageState extends State<MyHomePage> {
     List<Widget> stackChildren = [];
     size = MediaQuery.of(context).size;
     if (controller != null) {
-
       //TODO View for displaying the live camera footage
       stackChildren.add(
         Positioned(
@@ -392,7 +416,9 @@ class _MyHomePageState extends State<MyHomePage> {
                       ),
                       iconSize: 40,
                       color: Colors.black,
-                      onPressed: () {},
+                      onPressed: () {
+                        register = true;
+                      },
                     )
                   ],
                 ),
@@ -421,7 +447,7 @@ class FaceDetectorPainter extends CustomPainter {
   FaceDetectorPainter(this.absoluteImageSize, this.faces, this.camDire2);
 
   final Size absoluteImageSize;
-  final List<Face> faces;
+  final List<Recognition> faces;
   CameraLensDirection camDire2;
 
   @override
@@ -434,32 +460,32 @@ class FaceDetectorPainter extends CustomPainter {
       ..strokeWidth = 2.0
       ..color = Colors.indigoAccent;
 
-    for (Face face in faces) {
+    for (Recognition face in faces) {
       canvas.drawRect(
         Rect.fromLTRB(
           camDire2 == CameraLensDirection.front
-              ? (absoluteImageSize.width - face.boundingBox.right) * scaleX
-              : face.boundingBox.left * scaleX,
-          face.boundingBox.top * scaleY,
+              ? (absoluteImageSize.width - face.location.right) * scaleX
+              : face.location.left * scaleX,
+          face.location.top * scaleY,
           camDire2 == CameraLensDirection.front
-              ? (absoluteImageSize.width - face.boundingBox.left) * scaleX
-              : face.boundingBox.right * scaleX,
-          face.boundingBox.bottom * scaleY,
+              ? (absoluteImageSize.width - face.location.left) * scaleX
+              : face.location.right * scaleX,
+          face.location.bottom * scaleY,
         ),
         paint,
       );
 
-      // TextSpan span = TextSpan(
-      //     style: const TextStyle(color: Colors.white, fontSize: 20),
-      //     text: "${face.name}  ${face.distance.toStringAsFixed(2)}");
-      // TextPainter tp = TextPainter(
-      //     text: span,
-      //     textAlign: TextAlign.left,
-      //     textDirection: TextDirection.ltr);
-      // tp.layout();
-      // tp.paint(canvas, Offset(face.location.left*scaleX, face.location.top*scaleY));
+      TextSpan span = TextSpan(
+          style: const TextStyle(color: Colors.white, fontSize: 20),
+          text: "${face.name}  ${face.distance.toStringAsFixed(2)}");
+      TextPainter tp = TextPainter(
+          text: span,
+          textAlign: TextAlign.left,
+          textDirection: TextDirection.ltr);
+      tp.layout();
+      tp.paint(canvas,
+          Offset(face.location.left * scaleX, face.location.top * scaleY));
     }
-
   }
 
   @override
