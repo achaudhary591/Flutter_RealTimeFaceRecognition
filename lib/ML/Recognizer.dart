@@ -24,7 +24,7 @@ class Recognizer {
   late var _probabilityProcessor;
 
   @override
-  String get modelName => 'facenet.tflite';
+  String get modelName => 'mobile_face_net.tflite';
 
   @override
   NormalizeOp get preProcessNormalizeOp => NormalizeOp(127.5, 127.5);

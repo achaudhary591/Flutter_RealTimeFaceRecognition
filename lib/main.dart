@@ -14,10 +14,12 @@ late List<CameraDescription> cameras;
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   cameras = await availableCameras();
-  runApp(MyApp());
+  runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -29,7 +31,7 @@ class MyApp extends StatelessWidget {
 }
 
 class MyHomePage extends StatefulWidget {
-  MyHomePage({Key? key}) : super(key: key);
+  const MyHomePage({Key? key}) : super(key: key);
 
   @override
   _MyHomePageState createState() => _MyHomePageState();
@@ -111,7 +113,7 @@ class _MyHomePageState extends State<MyHomePage> {
     recognitions.clear();
 
     //TODO convert CameraImage to Image and rotate it so that our frame will be in a portrait
-    image = convertYUV420ToImage(frame!);
+    image = _convertYUV420(frame!);
     image = img.copyRotate(
         image!, camDirec == CameraLensDirection.front ? 270 : 90);
 
@@ -122,7 +124,7 @@ class _MyHomePageState extends State<MyHomePage> {
           faceRect.width.toInt(), faceRect.height.toInt());
 
       //TODO pass cropped face to face recognition model
-      Recognition recognition = _recognizer.recognize(croppedFace!, faceRect);
+      Recognition recognition = _recognizer.recognize(croppedFace, faceRect);
       if (recognition.distance > 1) {
         recognition.name = "Unknown";
       }
@@ -130,7 +132,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
       //TODO show face registration dialogue
       if (register) {
-        showFaceRegistrationDialogue(croppedFace!, recognition);
+        showFaceRegistrationDialogue(croppedFace, recognition);
         register = false;
       }
     }
@@ -159,7 +161,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 height: 20,
               ),
               Image.memory(
-                Uint8List.fromList(img.encodeBmp(croppedFace!)),
+                Uint8List.fromList(img.encodeBmp(croppedFace)),
                 width: 200,
                 height: 200,
               ),
@@ -186,7 +188,7 @@ class _MyHomePageState extends State<MyHomePage> {
                     ));
                   },
                   style: ElevatedButton.styleFrom(
-                      primary: Colors.blue, minimumSize: const Size(200, 40)),
+                      backgroundColor: Colors.blue, minimumSize: const Size(200, 40)),
                   child: const Text("Register"))
             ],
           ),
@@ -387,43 +389,41 @@ class _MyHomePageState extends State<MyHomePage> {
         margin: const EdgeInsets.only(left: 20, right: 20),
         color: Colors.blue,
         child: Center(
-          child: Container(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                    IconButton(
-                      icon: const Icon(
-                        Icons.cached,
-                        color: Colors.white,
-                      ),
-                      iconSize: 40,
-                      color: Colors.black,
-                      onPressed: () {
-                        _toggleCameraDirection();
-                      },
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  IconButton(
+                    icon: const Icon(
+                      Icons.cached,
+                      color: Colors.white,
                     ),
-                    Container(
-                      width: 30,
+                    iconSize: 40,
+                    color: Colors.black,
+                    onPressed: () {
+                      _toggleCameraDirection();
+                    },
+                  ),
+                  Container(
+                    width: 30,
+                  ),
+                  IconButton(
+                    icon: const Icon(
+                      Icons.face_retouching_natural,
+                      color: Colors.white,
                     ),
-                    IconButton(
-                      icon: const Icon(
-                        Icons.face_retouching_natural,
-                        color: Colors.white,
-                      ),
-                      iconSize: 40,
-                      color: Colors.black,
-                      onPressed: () {
-                        register = true;
-                      },
-                    )
-                  ],
-                ),
-              ],
-            ),
+                    iconSize: 40,
+                    color: Colors.black,
+                    onPressed: () {
+                      register = true;
+                    },
+                  )
+                ],
+              ),
+            ],
           ),
         ),
       ),

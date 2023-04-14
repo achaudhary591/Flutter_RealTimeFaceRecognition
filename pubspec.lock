@@ -518,13 +518,13 @@ packages:
     source: hosted
     version: "0.4.16"
   tflite_flutter:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: tflite_flutter
-      sha256: "663483abf86066cdf9eae29df65e5e39ea5823d3f426507a81840d3b84ce58cd"
+      sha256: "79e3271acd223e36c724fa6708e356191851011dbcddc2149f0e644a4879e055"
       url: "https://pub.dev"
     source: hosted
-    version: "0.9.0"
+    version: "0.9.1"
   tflite_flutter_helper:
     dependency: "direct main"
     description:
