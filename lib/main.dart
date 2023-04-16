@@ -66,7 +66,7 @@ class _MyHomePageState extends State<MyHomePage> {
     initializeCamera();
   }
 
-  //TODO code to initialize the camera feed
+  //TODO code to initialize the camera's feed
   initializeCamera() async {
     controller = CameraController(description, ResolutionPreset.high);
     await controller.initialize().then((_) {
